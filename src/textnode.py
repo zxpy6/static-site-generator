@@ -41,3 +41,29 @@ def text_node_to_html_node(text_node: TextNode) -> LeafNode | Exception:
             return LeafNode("img", "", {"src": text_node.url, "alt": text_node.text})  # pyright: ignore[reportArgumentType]
         case _:
             raise Exception("Unrecognized node type")
+        
+def split_nodes_delimiter(old_nodes: list[TextNode], delimiter: str, text_type: TextType) -> list[TextNode]:
+    match text_type:
+        case TextType.TEXT:
+            return old_nodes
+        case TextType.BOLD:
+            if delimiter != "**": return old_nodes
+        case TextType.ITALIC:
+            if delimiter != "_": return old_nodes
+        case TextType.CODE:
+            if delimiter != "`": return old_nodes
+    
+    new_nodes = []
+    for n in old_nodes:
+        if n.text.count(delimiter) < 2 or n.text_type != TextType.TEXT:
+            new_nodes.append(n)
+            continue
+        s1, s2, s3 = n.text.split(delimiter, 2)
+        if s1 != "":
+            new_nodes.append(TextNode(s1, TextType.TEXT))
+        if s2 != "":
+            new_nodes.append(TextNode(s2, text_type))
+        if s3 != "":
+            new_nodes.append(TextNode(s3, TextType.TEXT))
+    
+    return new_nodes
